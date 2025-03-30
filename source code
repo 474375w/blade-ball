@@ -42,7 +42,7 @@ game:GetService("ReplicatedStorage").Remotes.BallAdded.OnClientEvent:Connect(fun
             local directionVector = (HumanoidRootPart.Position - ball.Position).Unit
             local speedTowardsPlayer = (ball.AssemblyLinearVelocity - (HumanoidRootPart.AssemblyLinearVelocity or Vector3.zero)):Dot(directionVector)
             
-            if speedTowardsPlayer > 0 and distance < speedTowardsPlayer * 0.65 and ball:GetAttribute("target") == LocalPlayer.Name and not isParrying then
+            if distance < speedTowardsPlayer * 0.65 and ball:GetAttribute("target") == LocalPlayer.Name and not isParrying then
             isParrying = true
                 remoteEvent:FireServer("a2e45e", upvalue17, 0, CFrame.new(), {}, {})
             end
