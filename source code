@@ -38,6 +38,7 @@ game:GetService("ReplicatedStorage").Remotes.BallAdded.OnClientEvent:Connect(fun
             -- 精简的计算预计时间然后在球到达本地玩家的预计时间小于0.65的时候格挡  
             -- 就是简单的 路程/速度 = 时间  
             -- 因为是两个移动物体所以我计算的是相对速度
+            -- 但因为是编程所以变换了一下用乘法代替除法
             local distance = (HumanoidRootPart.Position - ball.Position).Magnitude
             local directionVector = (HumanoidRootPart.Position - ball.Position).Unit
             local speedTowardsPlayer = (ball.AssemblyLinearVelocity - (HumanoidRootPart.AssemblyLinearVelocity or Vector3.zero)):Dot(directionVector)
