@@ -1,0 +1,60 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local isParrying = false
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character = newCharacter
+    HumanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    isParrying = false
+end)
+
+local targetFunction
+for i, v in next, getgc(true) do
+    if typeof(v) == 'function' and debug.getinfo(v).nups == 24 and debug.info(v, "l") == 263 then
+        targetFunction = v
+        break
+    end
+end
+local remoteEvent = getupvalue(targetFunction, 18)    --远程事件实例
+local upvalue17 = getupvalue(targetFunction, 17)    --标识符
+
+game:GetService("ReplicatedStorage").Remotes.ParrySuccess.OnClientEvent:Connect(function()    --格挡成功事件
+        isParrying = false
+end)
+
+game:GetService("ReplicatedStorage").Remotes.BallAdded.OnClientEvent:Connect(function(ball)
+    coroutine.wrap(function()
+        local steppedConnection
+        steppedConnection = RunService.RenderStepped:Connect(function()
+            if not ball.Parent then
+                steppedConnection:Disconnect()
+                return
+            end
+            if isParrying then return end
+            if not HumanoidRootPart then return end
+            -- 精简的计算预计时间然后在球到达本地玩家的预计时间小于0.65的时候格挡  
+            -- 就是简单的 路程/速度 = 时间  
+            -- 因为是两个移动物体所以我计算的是相对速度
+            local distance = (HumanoidRootPart.Position - ball.Position).Magnitude
+            local directionVector = (HumanoidRootPart.Position - ball.Position).Unit
+            local speedTowardsPlayer = (ball.AssemblyLinearVelocity - (HumanoidRootPart.AssemblyLinearVelocity or Vector3.zero)):Dot(directionVector)
+            
+            if speedTowardsPlayer > 0 and distance < speedTowardsPlayer * 0.65 and ball:GetAttribute("target") == LocalPlayer.Name and not isParrying then
+            isParrying = true
+                remoteEvent:FireServer("a2e45e", upvalue17, 0, CFrame.new(), {}, {})
+            end
+        end)
+    end)()
+end)
+--[[  
+简单讲一下这些都是这么获取的  
+拦截格挡触发的远程事件然后获取当前调用栈层的下一层(为什么是下一层?因为本层是你的hook)的脚本也就是这个远程事件的源脚本(注入器函数都基本上有那个获取调用脚本的函数也就是getcallingscript  
+当然还是用debug.info或者debug.getinfo更好毕竟能获取当前调用栈任意层的详细信息)  
+然后获取字节码进行反编译然后搜索FireServer快速找到发送远程事件的部分然后看一看他所在的函数的逻辑大概就知道了没必要多说了  
+
+而BallAdded是我拦截访问workspace.Balls的所有子对象获取访问者的源脚本反编译然后查看大概逻辑而知道的  
+当然也可以直接给所有远程事件绑定监听器这种穷举法  
+--]]
