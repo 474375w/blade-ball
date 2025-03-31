@@ -1,0 +1,47 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local isParrying = false
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character = newCharacter
+    HumanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    isParrying = false
+end)
+
+local targetFunction
+for i, v in next, getgc(true) do
+    if typeof(v) == 'function' and debug.getinfo(v).nups == 24 and debug.info(v, "l") == 263 then
+        targetFunction = v
+        break
+    end
+end
+local remoteEvent = getupvalue(targetFunction, 18)   
+local upvalue17 = getupvalue(targetFunction, 17)  
+
+game:GetService("ReplicatedStorage").Remotes.ParrySuccess.OnClientEvent:Connect(function()
+        isParrying = false
+end)
+
+game:GetService("ReplicatedStorage").Remotes.BallAdded.OnClientEvent:Connect(function(ball)
+    coroutine.wrap(function()
+        local steppedConnection = RunService.RenderStepped:Connect(function()      
+            if not ball.Parent then
+                steppedConnection:Disconnect()
+                return
+            end
+            if isParrying or not HumanoidRootPart then return end
+
+            local distance = (HumanoidRootPart.Position - ball.Position).Magnitude
+            local directionVector = (HumanoidRootPart.Position - ball.Position).Unit
+            local speedTowardsPlayer = (ball.AssemblyLinearVelocity - (HumanoidRootPart.AssemblyLinearVelocity or Vector3.zero)):Dot(directionVector)
+            
+            if distance < speedTowardsPlayer * 0.65 and ball:GetAttribute("target") == LocalPlayer.Name and not isParrying then
+            isParrying = true
+                remoteEvent:FireServer("a2e45e", upvalue17, 0, CFrame.new(), {}, {})
+            end
+        end)
+    end)()
+end)
