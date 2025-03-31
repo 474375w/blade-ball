@@ -27,7 +27,8 @@ end)
 
 game:GetService("ReplicatedStorage").Remotes.BallAdded.OnClientEvent:Connect(function(ball)
     coroutine.wrap(function()
-        local steppedConnection = RunService.RenderStepped:Connect(function()      
+        local steppedConnection
+        steppedConnection = RunService.RenderStepped:Connect(function()      
             if not ball.Parent then
                 steppedConnection:Disconnect()
                 return
