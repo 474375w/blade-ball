@@ -34,7 +34,6 @@ game:GetService("ReplicatedStorage").Remotes.BallAdded.OnClientEvent:Connect(fun
                 return
             end
             if isParrying or not HumanoidRootPart then return end
-
             local distance = (HumanoidRootPart.Position - ball.Position).Magnitude
             local directionVector = (HumanoidRootPart.Position - ball.Position).Unit
             local speedTowardsPlayer = (ball.AssemblyLinearVelocity - (HumanoidRootPart.AssemblyLinearVelocity or Vector3.zero)):Dot(directionVector)
